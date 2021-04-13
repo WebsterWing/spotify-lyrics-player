@@ -14,7 +14,20 @@ import {
 import axios from "axios";
 
 function App() {
-  const [accessKeys, setAccessKeys] = useState({});
+  const [accessKeys, setAccessKeys] = useState(() => {
+    const storedAccessToken = sessionStorage.getItem("spotifyAccessToken");
+    const storedRefreshToken = sessionStorage.getItem("spotifyRefreshToken");
+    if (storedAccessToken && storedRefreshToken) {
+      return {
+        accessToken: storedAccessToken,
+        refreshToken: storedRefreshToken,
+        expiresIn: 61,
+      };
+    } else {
+      return {};
+    }
+  });
+
   const [code, setCode] = useState();
 
   // get access tokens with code
@@ -59,6 +72,14 @@ function App() {
         });
     }, (expiresIn - 60) * 1000);
     return () => clearTimeout(timeout);
+  }, [accessKeys]);
+
+  // add accessKeys to sessionStore
+  useEffect(() => {
+    const { accessToken, refreshToken } = accessKeys;
+    if (!accessToken || !refreshToken) return;
+    sessionStorage.setItem("spotifyAccessToken", accessToken);
+    sessionStorage.setItem("spotifyRefreshToken", refreshToken);
   }, [accessKeys]);
 
   return (
