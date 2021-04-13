@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const SpotifyWebApi = require("spotify-web-api-node");
+const lyricsFinder = require("lyrics-finder");
 
 const app = express();
 
@@ -12,6 +13,7 @@ const spotifyCredentials = {
   redirectUri: process.env.REDIRECT_URI,
 };
 
+app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors());
 
@@ -50,6 +52,18 @@ app.post("/refresh", (req, res) => {
         accessToken: response.body.access_token,
         expiresIn: response.body.expires_in,
       });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(400);
+    });
+});
+
+app.get("/lyrics", (req, res) => {
+  const { artist, title } = req.query;
+  lyricsFinder(artist, title)
+    .then((lyrics) => {
+      res.json({ lyrics });
     })
     .catch((err) => {
       console.log(err);
